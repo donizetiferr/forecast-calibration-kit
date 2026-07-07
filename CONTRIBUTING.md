@@ -1,7 +1,9 @@
 # Contributing
 
 Thanks for your interest in improving `forecast-calibration-kit`. Bug reports,
-feature requests and pull requests are all welcome.
+feature requests and pull requests are all welcome. Please also read the
+[Code of Conduct](./CODE_OF_CONDUCT.md); security issues should go through
+[SECURITY.md](./SECURITY.md) instead of a public issue.
 
 ## Getting started
 

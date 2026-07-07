@@ -36,10 +36,11 @@ describe('parseArgs', () => {
     expect(parseArgs(['--bins=7']).bins).toBe(7);
   });
 
-  it('parses --format, --eps and a positional file argument', () => {
+  it('parses --format, --eps (both spaced and = forms) and a positional file argument', () => {
     expect(parseArgs(['--format', 'json']).format).toBe('json');
     expect(parseArgs(['--format=json']).format).toBe('json');
     expect(parseArgs(['--eps', '0.01']).eps).toBe(0.01);
+    expect(parseArgs(['--eps=0.02']).eps).toBe(0.02);
     expect(parseArgs(['data.json']).input).toBe('data.json');
   });
 
@@ -58,6 +59,11 @@ describe('parseArgs', () => {
     expect(() => parseArgs(['--eps', '0.9'])).toThrow(CliArgError);
     expect(() => parseArgs(['--bins'])).toThrow(CliArgError);
     expect(() => parseArgs(['a.json', 'b.json'])).toThrow(CliArgError);
+  });
+
+  it('rejects a non-numeric value for --bins or --eps', () => {
+    expect(() => parseArgs(['--bins', 'abc'])).toThrow(/expects a number/);
+    expect(() => parseArgs(['--eps', 'abc'])).toThrow(/expects a number/);
   });
 });
 
