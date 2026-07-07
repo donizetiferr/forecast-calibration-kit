@@ -1,6 +1,6 @@
 {
   "name": "forecast-calibration-kit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Calibration metrics for probabilistic forecasts: Brier score, log loss, reliability diagram, Expected Calibration Error (ECE) and the Murphy decomposition of the Brier score. Zero runtime dependencies, strict TypeScript, with a CLI.",
   "keywords": [
     "brier-score",
