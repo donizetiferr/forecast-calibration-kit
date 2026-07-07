@@ -20,29 +20,11 @@ Brier score into reliability, resolution and uncertainty.
 
 Probabilistic forecasting is everywhere — weather, prediction markets, credit
 risk, sports, and the probability outputs of machine-learning classifiers.
-Python has had `scikit-learn` (`brier_score_loss`, `log_loss`,
-`calibration_curve`) and `briertools` for years; the JS/TS side of this space
-is much younger and thinner. A couple of narrow, recent packages exist — see
-[Related work](#related-work) — but none pair the full measurement suite with
-the Murphy (1973) decomposition of the Brier score, or ship a CLI for scoring a
-dataset without writing any code. This library focuses on that combination:
-a small, well-tested, dependency-free measurement toolkit.
-
-## Related work
-
-The JS/TS calibration-metrics space is still young, and it's worth naming what
-else is out there:
-
-- [`@kas0235/calibration`](https://www.npmjs.com/package/@kas0235/calibration) —
-  covers log loss, Brier score, ECE and reliability bins, and goes further than
-  this package on the *recalibration* side with Platt scaling and isotonic
-  (PAV) regression. It does not include the Murphy decomposition or a CLI.
-- [`brier-score`](https://www.npmjs.com/package/brier-score) — a minimal,
-  long-unmaintained package that computes the Brier score only.
-
-`forecast-calibration-kit` focuses on rounding out the *measurement* side —
-the Murphy decomposition and the CLI — rather than recalibration. If you need
-Platt scaling or isotonic regression, `@kas0235/calibration` covers that today.
+This library provides a small, dependency-free TypeScript toolkit for scoring
+how good those probabilities are: Brier score, log loss, calibration curve
+(reliability diagram), Expected Calibration Error, and the Murphy (1973)
+decomposition of the Brier score into reliability, resolution and uncertainty —
+plus a CLI for scoring a dataset without writing any code.
 
 ## Installation
 
