@@ -1,14 +1,17 @@
 # AGENTS.md derivado automaticamente de CLAUDE.md
 
-> Fonte de verdade: o `CLAUDE.md` indicado no recibo de derivacao.
-> Este arquivo preserva integralmente a fonte. O bloco abaixo apenas traduz
-> mecanismos de ambiente: use skills, ferramentas, hooks e subagentes nativos
-> do Codex quando a fonte citar equivalentes exclusivos de outro provider.
-> Regras de produto, engenharia, seguranca, privacidade, comunicacao e
-> validacao continuam obrigatorias. Instrucoes de sistema/desenvolvedor e este
-> preambulo prevalecem somente quando houver incompatibilidade operacional.
-> Customizacoes duraveis devem viver em `AGENTS.manual.md`; editar diretamente
-> este arquivo gera conflito e bloqueia overwrite automatico.
+> Fonte de verdade: o `CLAUDE.md` deste diretorio. Este arquivo preserva
+> integralmente a fonte. O bloco abaixo apenas traduz mecanismos de ambiente:
+> use skills, ferramentas, hooks e subagentes nativos do Codex quando a fonte
+> citar equivalentes exclusivos de outro provider. Regras de produto,
+> engenharia, seguranca, privacidade, comunicacao e validacao continuam
+> obrigatorias. Instrucoes de sistema/desenvolvedor e este preambulo prevalecem
+> somente quando houver incompatibilidade operacional.
+> Regra duravel do projeto que vale para qualquer provider (decisao do dono,
+> convencao, restricao) vai no `CLAUDE.md` deste diretorio: edite a fonte e a
+> proxima derivacao atualiza este arquivo. `AGENTS.manual.md` fica so para o
+> que for exclusivo do Codex, porque o Claude nao le esse arquivo.
+> Editar diretamente este arquivo gera conflito e bloqueia overwrite automatico.
 <!-- BEGIN CLAUDE.md LOSSLESS SOURCE -->
 # forecast-calibration-kit
 
