@@ -125,10 +125,20 @@ brierScore = reliability − resolution + uncertainty
 - **uncertainty** — `baseRate · (1 − baseRate)`, the intrinsic variance of the
   outcome; a property of the data, not of the forecasts.
 
-The identity holds exactly when forecasts are constant within each bin and
-approximately otherwise (the gap is the within-bin variance of the forecasts,
-which shrinks as `bins` grows) — the standard behaviour of the binned Brier
-decomposition.
+The reconstruction is the Brier score obtained by replacing each forecast with
+its bin's mean probability. It equals the original Brier score when forecasts
+are constant within each bin. Otherwise:
+
+```
+original Brier score - reconstruction
+  = Σ_bins (count_b / N) · [Var(p | bin) - 2 · Cov(p, outcome | bin)]
+```
+
+Variance and covariance here use the population denominator (`count_b`). The
+gap can have either sign and need not be small for coarse bins. For example,
+`[{ p: 0.1, outcome: 0 }, { p: 0.9, outcome: 1 }]` has Brier score `0.01`, but
+with one bin the reconstruction is `0.25`. Finer bins reduce the variation within
+each bin, though the absolute gap need not decrease monotonically.
 
 ## Choosing a metric
 
@@ -186,7 +196,7 @@ Brier score                   0.1974
 Log loss                      0.5775
 Expected calibration error    0.0965
 
-Brier decomposition (Brier = reliability - resolution + uncertainty)
+Brier decomposition (bin-mean forecasts)
   reliability                 0.0147
   resolution                  0.0608
   uncertainty                 0.2400

@@ -18,10 +18,10 @@ const DEFAULT_BINS = 10;
  * - **uncertainty** — variance of the outcome, `baseRate * (1 - baseRate)`; a
  *   property of the data alone, independent of the forecasts.
  *
- * The identity holds exactly when forecasts are constant within each bin, and
- * approximately otherwise (the discrepancy is the within-bin variance of the
- * forecasts, which shrinks as `bins` grows). This mirrors the standard behaviour
- * of the binned Brier decomposition.
+ * The reconstruction is the Brier score of forecasts replaced by their bin
+ * means. It equals the original score when forecasts are constant within each
+ * bin. Otherwise, original score - reconstruction is the sample-weighted sum
+ * of Var(p | bin) - 2 * Cov(p, outcome | bin), and may have either sign.
  *
  * @param samples Non-empty list of `{ p, outcome }` pairs.
  * @param opts    Optional settings. `bins` (default `10`) must be a positive integer.

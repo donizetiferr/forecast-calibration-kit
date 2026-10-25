@@ -56,8 +56,10 @@ export interface CalibrationBin {
  * The Murphy decomposition of the Brier score.
  *
  * The three terms satisfy the identity
- * `brierScore = reliability - resolution + uncertainty` (exactly when forecasts
- * are constant within each bin; approximately otherwise).
+ * `brierScore = reliability - resolution + uncertainty` for forecasts replaced
+ * by their bin means. This also equals the original score when forecasts are
+ * constant within each bin. Otherwise, the gap depends on within-bin forecast
+ * variance and covariance with outcomes, and may have either sign.
  *
  * @property reliability Weighted mean squared gap between forecast and observed
  *                       frequency per bin. Lower is better (0 = perfectly calibrated bins).

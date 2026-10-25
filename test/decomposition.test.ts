@@ -20,6 +20,29 @@ function constantWithinBinSamples(
 }
 
 describe('brierDecomposition', () => {
+  it.each([
+    { outcomes: [0, 1] as const, score: 0.01, covariance: 0.2 },
+    { outcomes: [1, 0] as const, score: 0.81, covariance: -0.2 },
+  ])(
+    'accounts for a binned-score gap of either sign ($score)',
+    ({ outcomes, score, covariance }) => {
+      const samples: Sample[] = [
+        { p: 0.1, outcome: outcomes[0] },
+        { p: 0.9, outcome: outcomes[1] },
+      ];
+      const { reliability, resolution, uncertainty } = brierDecomposition(samples, { bins: 1 });
+      const binnedScore = reliability - resolution + uncertainty;
+      expect(binnedScore).toBeCloseTo(0.25, 12);
+      expect(brierScore(samples)).toBeCloseTo(score, 12);
+      // Var(p) = 0.16 in this bin. The gap also includes -2 * Cov(p, outcome).
+      expect(brierScore(samples) - binnedScore).toBeCloseTo(0.16 - 2 * covariance, 12);
+      expect(binnedScore).toBeCloseTo(
+        brierScore(samples.map(({ outcome }) => ({ p: 0.5, outcome }))),
+        12,
+      );
+    },
+  );
+
   it('matches hand-computed reliability / resolution / uncertainty', () => {
     // bin5: p=0.5 x2 (one hit, one miss) ; bin9: p=1.0 x1 (hit). baseRate = 2/3.
     const samples: Sample[] = [

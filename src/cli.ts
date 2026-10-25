@@ -233,7 +233,7 @@ function formatTable(r: CliReport): string {
     `${'Log loss'.padEnd(label)}${fmt(r.logLoss)}`,
     `${'Expected calibration error'.padEnd(label)}${fmt(r.expectedCalibrationError)}`,
     '',
-    'Brier decomposition (Brier = reliability - resolution + uncertainty)',
+    'Brier decomposition (bin-mean forecasts)',
     `${'  reliability'.padEnd(label)}${fmt(r.decomposition.reliability)}`,
     `${'  resolution'.padEnd(label)}${fmt(r.decomposition.resolution)}`,
     `${'  uncertainty'.padEnd(label)}${fmt(r.decomposition.uncertainty)}`,

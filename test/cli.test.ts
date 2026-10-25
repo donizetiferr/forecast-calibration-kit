@@ -96,6 +96,20 @@ describe('computeReport', () => {
 });
 
 describe('formatReport', () => {
+  it('labels the decomposition as applying to bin-mean forecasts', () => {
+    const report = computeReport(
+      [
+        { p: 0.1, outcome: 0 },
+        { p: 0.9, outcome: 1 },
+      ],
+      { bins: 1 },
+    );
+    expect(report.brierScore).toBeCloseTo(0.01, 12);
+    const table = formatReport(report, 'table');
+    expect(table).toContain('Brier decomposition (bin-mean forecasts)');
+    expect(table).not.toContain('Brier = reliability - resolution + uncertainty');
+  });
+
   it('produces valid JSON in json mode', () => {
     const report = computeReport(SAMPLES);
     const parsed = JSON.parse(formatReport(report, 'json'));
