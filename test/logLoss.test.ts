@@ -46,4 +46,26 @@ describe('logLoss', () => {
   it('throws a CalibrationError on empty input', () => {
     expect(() => logLoss([])).toThrow(CalibrationError);
   });
+
+  it.each([Number.MIN_VALUE, 1e-20, 1e-15, 0.1])(
+    'keeps endpoint penalties finite and symmetric with eps = %s',
+    (eps) => {
+      const positiveMiss = logLoss([{ p: 0, outcome: 1 }], { eps });
+      const negativeMiss = logLoss([{ p: 1, outcome: 0 }], { eps });
+      expect(positiveMiss).toBe(-Math.log(eps));
+      expect(negativeMiss).toBe(positiveMiss);
+
+      const positiveHit = logLoss([{ p: 1, outcome: 1 }], { eps });
+      const negativeHit = logLoss([{ p: 0, outcome: 0 }], { eps });
+      expect(positiveHit).toBe(-Math.log1p(-eps));
+      expect(negativeHit).toBe(positiveHit);
+    },
+  );
+
+  it('preserves probabilities smaller than machine epsilon without cancellation', () => {
+    const p = 1e-20;
+    const eps = Number.MIN_VALUE;
+    expect(logLoss([{ p, outcome: 0 }], { eps })).toBe(-Math.log1p(-p));
+    expect(logLoss([{ p, outcome: 1 }], { eps })).toBe(-Math.log(p));
+  });
 });

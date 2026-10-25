@@ -27,8 +27,15 @@ export function logLoss(samples: readonly Sample[], opts: LogLossOptions = {}): 
 
   let sum = 0;
   for (const { p, outcome } of samples) {
-    const clamped = Math.min(Math.max(p, eps), 1 - eps);
-    sum += outcome === 1 ? -Math.log(clamped) : -Math.log(1 - clamped);
+    // Work with the smaller tail directly: forming 1 - eps can round to 1,
+    // and subtracting a probability near 1 loses precision even for default eps.
+    if (p <= 0.5) {
+      const tail = Math.max(p, eps);
+      sum += outcome === 1 ? -Math.log(tail) : -Math.log1p(-tail);
+    } else {
+      const tail = Math.max(1 - p, eps);
+      sum += outcome === 1 ? -Math.log1p(-tail) : -Math.log(tail);
+    }
   }
   return sum / samples.length;
 }
