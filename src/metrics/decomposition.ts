@@ -46,18 +46,25 @@ export function brierDecomposition(
     totalOutcome += sumOutcome;
   }
   const baseRate = totalOutcome / n;
+  const negativeRate = (n - totalOutcome) / n;
+  const useNegativeOutcomes = totalOutcome > n / 2;
 
   const reliability = new CompensatedSum();
   const resolution = new CompensatedSum();
   for (const { count, meanPredicted, sumOutcome } of aggregates) {
     const observedFrequency = sumOutcome / count;
     reliability.add(count * (meanPredicted - observedFrequency) ** 2);
-    resolution.add(count * (observedFrequency - baseRate) ** 2);
+    // Resolution is unchanged by exchanging the labels. Use the rarer outcome
+    // to avoid subtracting two frequencies close to one in imbalanced data.
+    const deviation = useNegativeOutcomes
+      ? (count - sumOutcome) / count - negativeRate
+      : observedFrequency - baseRate;
+    resolution.add(count * deviation ** 2);
   }
 
   return {
     reliability: reliability.value() / n,
     resolution: resolution.value() / n,
-    uncertainty: baseRate * (1 - baseRate),
+    uncertainty: baseRate * negativeRate,
   };
 }

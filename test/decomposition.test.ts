@@ -20,6 +20,43 @@ function constantWithinBinSamples(
 }
 
 describe('brierDecomposition', () => {
+  it.each([10, 10_000, 100_001])(
+    'preserves uncertainty when the rare outcome is relabeled in %i samples',
+    (count) => {
+      const samples: Sample[] = Array.from({ length: count }, (_, i) => ({
+        p: 0.5,
+        outcome: i === 0 ? 0 : 1,
+      }));
+      const complement = samples.map(({ p, outcome }): Sample => ({
+        p,
+        outcome: outcome === 0 ? 1 : 0,
+      }));
+      const expected = ((count - 1) / count) * (1 / count);
+      expect(brierDecomposition(samples).uncertainty).toBe(expected);
+      expect(brierDecomposition(complement).uncertainty).toBe(expected);
+    },
+  );
+
+  it('preserves resolution when a rare outcome is concentrated in one bin', () => {
+    const count = 10_000;
+    const rareBinCount = 1_000;
+    const samples: Sample[] = Array.from({ length: count }, (_, i) => ({
+      p: i < rareBinCount ? 0.1 : 0.9,
+      outcome: i === 0 ? 0 : 1,
+    }));
+    const complement = samples.map(({ p, outcome }): Sample => ({
+      p,
+      outcome: outcome === 0 ? 1 : 0,
+    }));
+    const actual = brierDecomposition(samples, { bins: 2 }).resolution;
+    const reversed = brierDecomposition(complement, { bins: 2 }).resolution;
+    // Variance of the bin frequencies with one rare outcome in the first bin:
+    // (m/N)*(1/m - 1/N)^2 + ((N-m)/N)*(1/N)^2 = (N-m)/(m*N^2).
+    const expected = (count - rareBinCount) / (rareBinCount * count ** 2);
+    expect(actual).toBe(reversed);
+    expect(Math.abs(actual - expected)).toBeLessThan(expected * Number.EPSILON * 4);
+  });
+
   it('retains small reliability terms and full resolution across many occupied bins', () => {
     const count = 10_000;
     const bins = 2 ** 40;
