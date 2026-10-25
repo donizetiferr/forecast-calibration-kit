@@ -2,6 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { CalibrationError, logLoss, type Sample } from '../src/index';
 
 describe('logLoss', () => {
+  it('preserves the score when a constant forecast is repeated many times', () => {
+    const sample: Sample = { p: 0.7, outcome: 1 };
+    expect(logLoss(Array.from({ length: 10_000 }, () => sample))).toBeCloseTo(
+      logLoss([sample]),
+      15,
+    );
+  });
+
   it('equals ln(2) for a constant 0.5 forecaster', () => {
     const samples: Sample[] = [
       { p: 0.5, outcome: 1 },

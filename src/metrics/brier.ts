@@ -1,5 +1,6 @@
 import type { Sample } from '../types';
 import { assertSamples } from '../validation';
+import { CompensatedSum } from './_sum';
 
 /**
  * Computes the Brier score: the mean squared error between forecast
@@ -19,10 +20,10 @@ import { assertSamples } from '../validation';
  */
 export function brierScore(samples: readonly Sample[]): number {
   assertSamples(samples);
-  let sum = 0;
+  const sum = new CompensatedSum();
   for (const { p, outcome } of samples) {
     const diff = p - outcome;
-    sum += diff * diff;
+    sum.add(diff * diff);
   }
-  return sum / samples.length;
+  return sum.value() / samples.length;
 }

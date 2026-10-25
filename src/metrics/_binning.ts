@@ -1,4 +1,5 @@
 import type { Sample } from '../types';
+import { CompensatedSum } from './_sum';
 
 /**
  * Aggregate statistics for a single probability bin.
@@ -25,21 +26,23 @@ export interface BinAggregate {
  * @internal
  */
 export function binSamples(samples: readonly Sample[], bins: number): BinAggregate[] {
-  const aggregates = new Map<number, BinAggregate>();
+  const aggregates = new Map<number, Omit<BinAggregate, 'sumP'> & { sumP: CompensatedSum }>();
 
   for (const { p, outcome } of samples) {
     const index = Math.min(Math.floor(p * bins), bins - 1);
     let bin = aggregates.get(index);
     if (bin === undefined) {
-      bin = { index, count: 0, sumP: 0, sumOutcome: 0 };
+      bin = { index, count: 0, sumP: new CompensatedSum(), sumOutcome: 0 };
       aggregates.set(index, bin);
     }
     bin.count += 1;
-    bin.sumP += p;
+    bin.sumP.add(p);
     bin.sumOutcome += outcome;
   }
 
-  return [...aggregates.values()].sort((a, b) => a.index - b.index);
+  return [...aggregates.values()]
+    .sort((a, b) => a.index - b.index)
+    .map((bin) => ({ ...bin, sumP: bin.sumP.value() }));
 }
 
 /**

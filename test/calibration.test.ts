@@ -15,6 +15,16 @@ const TWO_BIN_SET: Sample[] = [
 ];
 
 describe('calibrationCurve', () => {
+  it('preserves the mean of repeated probabilities in a large calibrated bin', () => {
+    const samples: Sample[] = Array.from({ length: 10_000 }, (_, i) => ({
+      p: 0.7,
+      outcome: i < 7_000 ? 1 : 0,
+    }));
+    expect(calibrationCurve(samples)[0]?.meanPredicted).toBe(0.7);
+    expect(expectedCalibrationError(samples)).toBe(0);
+    expect(brierDecomposition(samples).reliability).toBe(0);
+  });
+
   it('handles billions of mostly empty bins without allocating empty entries', () => {
     const bins = 2 ** 32;
     const samples: Sample[] = [

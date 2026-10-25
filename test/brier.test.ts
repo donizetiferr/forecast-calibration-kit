@@ -2,6 +2,26 @@ import { describe, expect, it } from 'vitest';
 import { brierScore, CalibrationError, type Sample } from '../src/index';
 
 describe('brierScore', () => {
+  it('preserves the score when a constant forecast is repeated many times', () => {
+    const sample: Sample = { p: 0.7, outcome: 0 };
+    expect(brierScore(Array.from({ length: 10_000 }, () => sample))).toBeCloseTo(
+      brierScore([sample]),
+      15,
+    );
+  });
+
+  it('retains small squared errors regardless of where a large error occurs', () => {
+    const small: Sample[] = Array.from({ length: 10_000 }, () => ({ p: 1e-8, outcome: 0 }));
+    const large: Sample = { p: 1, outcome: 0 };
+    const expected = (1 + small.length * 1e-16) / (small.length + 1);
+    for (const samples of [
+      [large, ...small],
+      [...small, large],
+    ]) {
+      expect(Math.abs(brierScore(samples) - expected)).toBeLessThan(expected * 1e-15);
+    }
+  });
+
   it('is 0 for perfect deterministic forecasts', () => {
     const samples: Sample[] = [
       { p: 1, outcome: 1 },
