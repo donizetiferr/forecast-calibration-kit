@@ -87,5 +87,11 @@ function stringify(value: unknown): string {
   if (typeof value === 'string') {
     return JSON.stringify(value);
   }
-  return Object.prototype.toString.call(value);
+  try {
+    return Object.prototype.toString.call(value);
+  } catch {
+    // Inspection can invoke a user-defined Symbol.toStringTag getter. A bad
+    // value must not replace the intended CalibrationError with its own error.
+    return '[uninspectable value]';
+  }
 }

@@ -96,6 +96,24 @@ describe('assertEps', () => {
 });
 
 describe('CalibrationError', () => {
+  it.each(['p', 'outcome', 'bins', 'eps'] as const)(
+    'keeps a domain error when an invalid %s value cannot be inspected',
+    (field) => {
+      const value = Object.defineProperty({}, Symbol.toStringTag, {
+        get() {
+          throw new TypeError('Cannot inspect value');
+        },
+      });
+      const validate = () => {
+        if (field === 'bins') return assertBins(value as number);
+        if (field === 'eps') return assertEps(value as number);
+        assertSamples([{ p: 0.5, outcome: 1, [field]: value } as unknown as Sample]);
+      };
+      expect(validate).toThrow(CalibrationError);
+      expect(validate).toThrow(/received/);
+    },
+  );
+
   it('has the expected name and is an Error', () => {
     const error = new CalibrationError('boom');
     expect(error).toBeInstanceOf(Error);
