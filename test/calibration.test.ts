@@ -204,6 +204,24 @@ describe('calibrationCurve', () => {
 });
 
 describe('expectedCalibrationError', () => {
+  it.each([1, 1 - 2 ** -20])(
+    'preserves a rare calibration gap with a constant forecast of %s',
+    (p) => {
+      const count = 10_000;
+      const samples: Sample[] = Array.from({ length: count }, (_, i) => ({
+        p,
+        outcome: i === 0 ? 0 : 1,
+      }));
+      const complement = samples.map(({ p, outcome }): Sample => ({
+        p: 1 - p,
+        outcome: outcome === 0 ? 1 : 0,
+      }));
+      const expected = Math.abs(1 / count - (1 - p));
+      expect(expectedCalibrationError(samples)).toBe(expected);
+      expect(expectedCalibrationError(complement)).toBe(expected);
+    },
+  );
+
   it('preserves the total gap across many occupied bins', () => {
     const bins = 2 ** 48;
     const samples: Sample[] = [{ p: 0, outcome: 1 }];

@@ -20,6 +20,25 @@ function constantWithinBinSamples(
 }
 
 describe('brierDecomposition', () => {
+  it.each([1, 1 - 2 ** -20])(
+    'preserves reliability for a rare error with a constant forecast of %s',
+    (p) => {
+      const count = 10_000;
+      const samples: Sample[] = Array.from({ length: count }, (_, i) => ({
+        p,
+        outcome: i === 0 ? 0 : 1,
+      }));
+      const complement = samples.map(({ p, outcome }): Sample => ({
+        p: 1 - p,
+        outcome: outcome === 0 ? 1 : 0,
+      }));
+      const expected = (1 / count - (1 - p)) ** 2;
+      const actual = brierDecomposition(samples).reliability;
+      expect(actual).toBe(brierDecomposition(complement).reliability);
+      expect(Math.abs(actual - expected)).toBeLessThan(expected * Number.EPSILON * 4);
+    },
+  );
+
   it.each([10, 10_000, 100_001])(
     'preserves uncertainty when the rare outcome is relabeled in %i samples',
     (count) => {

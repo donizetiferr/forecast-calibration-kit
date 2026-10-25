@@ -75,3 +75,20 @@ export function binMidpoint(index: number, bins: number): number {
   }
   return (index + 0.5) / bins;
 }
+
+/** Absolute calibration gap without cancellation near probability one. @internal */
+export function binCalibrationGap(
+  meanPredicted: number,
+  sumOutcome: number,
+  count: number,
+): number {
+  const observedFrequency = sumOutcome / count;
+  // Preserve exact calibration as represented by the public curve, including
+  // non-dyadic frequencies such as 7/10 paired with a mean forecast of 0.7.
+  if (meanPredicted === observedFrequency) return 0;
+  return Math.abs(
+    meanPredicted <= 0.5
+      ? meanPredicted - observedFrequency
+      : (count - sumOutcome) / count - (1 - meanPredicted),
+  );
+}

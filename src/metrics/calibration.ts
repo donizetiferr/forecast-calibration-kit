@@ -1,6 +1,6 @@
 import type { BinningOptions, CalibrationBin, Sample } from '../types';
 import { assertBins, assertOptions, assertSamples } from '../validation';
-import { binMidpoint, binSamples } from './_binning';
+import { binCalibrationGap, binMidpoint, binSamples } from './_binning';
 import { CompensatedSum } from './_sum';
 
 const DEFAULT_BINS = 10;
@@ -72,8 +72,7 @@ export function expectedCalibrationError(
   const aggregates = binSamples(samples, bins);
   const ece = new CompensatedSum();
   for (const { count, meanPredicted, sumOutcome } of aggregates) {
-    const observedFrequency = sumOutcome / count;
-    ece.add((count / n) * Math.abs(meanPredicted - observedFrequency));
+    ece.add((count / n) * binCalibrationGap(meanPredicted, sumOutcome, count));
   }
   return ece.value();
 }

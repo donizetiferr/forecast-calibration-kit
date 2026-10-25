@@ -1,6 +1,6 @@
 import type { BinningOptions, BrierDecomposition, Sample } from '../types';
 import { assertBins, assertOptions, assertSamples } from '../validation';
-import { binSamples } from './_binning';
+import { binCalibrationGap, binSamples } from './_binning';
 import { CompensatedSum } from './_sum';
 
 const DEFAULT_BINS = 10;
@@ -52,13 +52,12 @@ export function brierDecomposition(
   const reliability = new CompensatedSum();
   const resolution = new CompensatedSum();
   for (const { count, meanPredicted, sumOutcome } of aggregates) {
-    const observedFrequency = sumOutcome / count;
-    reliability.add(count * (meanPredicted - observedFrequency) ** 2);
+    reliability.add(count * binCalibrationGap(meanPredicted, sumOutcome, count) ** 2);
     // Resolution is unchanged by exchanging the labels. Use the rarer outcome
     // to avoid subtracting two frequencies close to one in imbalanced data.
     const deviation = useNegativeOutcomes
       ? (count - sumOutcome) / count - negativeRate
-      : observedFrequency - baseRate;
+      : sumOutcome / count - baseRate;
     resolution.add(count * deviation ** 2);
   }
 
