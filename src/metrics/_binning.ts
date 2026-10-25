@@ -10,8 +10,8 @@ export interface BinAggregate {
   index: number;
   /** Number of samples that fell into the bin. */
   count: number;
-  /** Sum of forecast probabilities in the bin. */
-  sumP: number;
+  /** Mean forecast probability in the bin. */
+  meanPredicted: number;
   /** Sum of outcomes (i.e. number of positive outcomes) in the bin. */
   sumOutcome: number;
 }
@@ -26,7 +26,10 @@ export interface BinAggregate {
  * @internal
  */
 export function binSamples(samples: readonly Sample[], bins: number): BinAggregate[] {
-  const aggregates = new Map<number, Omit<BinAggregate, 'sumP'> & { sumP: CompensatedSum }>();
+  const aggregates = new Map<
+    number,
+    Omit<BinAggregate, 'meanPredicted'> & { sumP: CompensatedSum }
+  >();
 
   for (const { p, outcome } of samples) {
     let index = Math.min(Math.floor(p * bins), bins - 1);
@@ -49,7 +52,12 @@ export function binSamples(samples: readonly Sample[], bins: number): BinAggrega
 
   return [...aggregates.values()]
     .sort((a, b) => a.index - b.index)
-    .map((bin) => ({ ...bin, sumP: bin.sumP.value() }));
+    .map(({ index, count, sumP, sumOutcome }) => ({
+      index,
+      count,
+      meanPredicted: sumP.mean(count),
+      sumOutcome,
+    }));
 }
 
 /**

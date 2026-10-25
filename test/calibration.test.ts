@@ -15,6 +15,33 @@ const TWO_BIN_SET: Sample[] = [
 ];
 
 describe('calibrationCurve', () => {
+  it.each([5, 9, 10, 10_000])(
+    'preserves a constant probability near one when repeated %i times',
+    (count) => {
+      const p = 1 - Number.EPSILON / 2;
+      const samples: Sample[] = Array.from({ length: count }, () => ({ p, outcome: 1 }));
+      expect(calibrationCurve(samples)[0]?.meanPredicted).toBe(p);
+      expect(expectedCalibrationError(samples)).toBe(1 - p);
+      expect(brierDecomposition(samples).reliability).toBe((1 - p) ** 2);
+    },
+  );
+
+  it('keeps the mean of mixed forecasts below one instead of rounding the sum first', () => {
+    const p = 1 - Number.EPSILON / 2;
+    const samples: Sample[] = [
+      { p, outcome: 1 },
+      { p, outcome: 1 },
+      { p, outcome: 1 },
+      { p, outcome: 1 },
+      { p: 1, outcome: 1 },
+    ];
+    for (const ordered of [samples, [...samples].reverse()]) {
+      expect(calibrationCurve(ordered)[0]?.meanPredicted).toBe(p);
+      expect(expectedCalibrationError(ordered)).toBeGreaterThan(0);
+      expect(brierDecomposition(ordered).reliability).toBeGreaterThan(0);
+    }
+  });
+
   it('keeps a probability on a decimal boundary in the bin to its right', () => {
     const samples: Sample[] = [
       { p: 0.58, outcome: 0 },

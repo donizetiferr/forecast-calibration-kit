@@ -49,8 +49,7 @@ export function brierDecomposition(
 
   const reliability = new CompensatedSum();
   const resolution = new CompensatedSum();
-  for (const { count, sumP, sumOutcome } of aggregates) {
-    const meanPredicted = sumP / count;
+  for (const { count, meanPredicted, sumOutcome } of aggregates) {
     const observedFrequency = sumOutcome / count;
     reliability.add(count * (meanPredicted - observedFrequency) ** 2);
     resolution.add(count * (observedFrequency - baseRate) ** 2);
