@@ -2,6 +2,28 @@ import { describe, expect, it } from 'vitest';
 import { brierScore, CalibrationError, type Sample } from '../src/index';
 
 describe('brierScore', () => {
+  it('keeps a small error that changes the rounded mean of mixed forecasts', () => {
+    const samples: Sample[] = [
+      { p: 1, outcome: 0 },
+      { p: 2 ** -27, outcome: 0 },
+      { p: 0, outcome: 0 },
+    ];
+    // (1 + 2^-54) / 3 rounds upward; rounding the sum first loses 2^-54.
+    expect(brierScore(samples)).toBe(0.33333333333333337);
+    expect(brierScore([...samples].reverse())).toBe(0.33333333333333337);
+  });
+
+  it.each([
+    { p: 0.1, outcome: 0, count: 7 },
+    { p: 0.1, outcome: 1, count: 5 },
+    { p: 0.3, outcome: 0, count: 3 },
+    { p: 1 - Number.EPSILON / 2, outcome: 0, count: 3 },
+  ] as const)('preserves a repeated squared error exactly ($p, $outcome, $count)', (sample) => {
+    const { p, outcome, count } = sample;
+    const samples = Array.from({ length: count }, () => ({ p, outcome }));
+    expect(brierScore(samples)).toBe((p - outcome) ** 2);
+  });
+
   it('preserves the score when a constant forecast is repeated many times', () => {
     const sample: Sample = { p: 0.7, outcome: 0 };
     expect(brierScore(Array.from({ length: 10_000 }, () => sample))).toBeCloseTo(

@@ -39,5 +39,5 @@ export function logLoss(samples: readonly Sample[], opts: LogLossOptions = {}): 
       sum.add(outcome === 1 ? -Math.log1p(-tail) : -Math.log(tail));
     }
   }
-  return sum.value() / samples.length;
+  return sum.mean(samples.length);
 }

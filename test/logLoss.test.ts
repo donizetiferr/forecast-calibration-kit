@@ -2,6 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { CalibrationError, logLoss, type Sample } from '../src/index';
 
 describe('logLoss', () => {
+  it.each([
+    { p: 0.1, outcome: 0, count: 3 },
+    { p: 0.2, outcome: 0, count: 3 },
+    { p: 0.8, outcome: 0, count: 5 },
+    { p: 0.9, outcome: 1, count: 5 },
+  ] as const)('preserves a repeated log penalty exactly ($p, $outcome, $count)', (sample) => {
+    const { p, outcome, count } = sample;
+    const samples = Array.from({ length: count }, () => ({ p, outcome }));
+    const penalty = outcome === 1 ? -Math.log(p) : -Math.log1p(-p);
+    expect(logLoss(samples)).toBe(penalty);
+  });
+
   it('preserves the score when a constant forecast is repeated many times', () => {
     const sample: Sample = { p: 0.7, outcome: 1 };
     expect(logLoss(Array.from({ length: 10_000 }, () => sample))).toBeCloseTo(

@@ -25,5 +25,5 @@ export function brierScore(samples: readonly Sample[]): number {
     const diff = p - outcome;
     sum.add(diff * diff);
   }
-  return sum.value() / samples.length;
+  return sum.mean(samples.length);
 }
