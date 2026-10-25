@@ -43,10 +43,11 @@ import {
   calibrationCurve,
   expectedCalibrationError,
   brierDecomposition,
+  type Sample,
 } from 'forecast-calibration-kit';
 
 // Each sample pairs a forecast probability `p` in [0, 1] with a binary outcome (0 or 1).
-const samples = [
+const samples: Sample[] = [
   { p: 0.9, outcome: 1 },
   { p: 0.8, outcome: 1 },
   { p: 0.3, outcome: 0 },

@@ -35,7 +35,33 @@ afterAll(async () => {
   }
 });
 
+async function typecheck(fixture: string): Promise<void> {
+  await execute(process.execPath, [
+    compiler,
+    '--noEmit',
+    '--strict',
+    '--target',
+    'ES2022',
+    '--module',
+    'Node16',
+    '--moduleResolution',
+    'Node16',
+    fixture,
+  ]).catch((error: { stdout: string; stderr: string }) => {
+    throw new Error(`${error.stdout}${error.stderr}`, { cause: error });
+  });
+}
+
 describe('package consumers', () => {
+  it('compiles the documented TypeScript quick start in strict mode', async () => {
+    const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8');
+    const quickStart = readme.match(/```ts\r?\n([\s\S]*?)```/)?.[1];
+    expect(quickStart).toBeDefined();
+    const fixture = join(directory, 'quick-start.mts');
+    await writeFile(fixture, quickStart!);
+    await typecheck(fixture);
+  }, 15_000);
+
   it.each(['cts', 'mts'])(
     'provides compatible types for a .%s consumer',
     async (extension) => {
@@ -49,20 +75,7 @@ describe('package consumers', () => {
           'void score;',
         ].join('\n'),
       );
-      await execute(process.execPath, [
-        compiler,
-        '--noEmit',
-        '--strict',
-        '--target',
-        'ES2022',
-        '--module',
-        'Node16',
-        '--moduleResolution',
-        'Node16',
-        fixture,
-      ]).catch((error: { stdout: string; stderr: string }) => {
-        throw new Error(`${error.stdout}${error.stderr}`, { cause: error });
-      });
+      await typecheck(fixture);
     },
     15_000,
   );
