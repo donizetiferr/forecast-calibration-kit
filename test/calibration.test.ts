@@ -15,6 +15,59 @@ const TWO_BIN_SET: Sample[] = [
 ];
 
 describe('calibrationCurve', () => {
+  it('keeps a probability on a decimal boundary in the bin to its right', () => {
+    const samples: Sample[] = [
+      { p: 0.58, outcome: 0 },
+      { p: 0.5800000000000001, outcome: 1 },
+    ];
+    const curve = calibrationCurve(samples, { bins: 100 });
+    expect(curve).toHaveLength(1);
+    expect(curve[0]?.binMidpoint).toBe(0.585);
+    expect(curve[0]?.count).toBe(2);
+    expect(expectedCalibrationError(samples, { bins: 100 })).toBeCloseTo(0.08, 15);
+    expect(brierDecomposition(samples, { bins: 100 }).reliability).toBeCloseTo(0.0064, 15);
+  });
+
+  it('keeps a probability immediately below a boundary in the bin to its left', () => {
+    const curve = calibrationCurve(
+      [
+        { p: 0.8999999999999999, outcome: 0 },
+        { p: 0.9, outcome: 1 },
+      ],
+      { bins: 10 },
+    );
+    expect(curve.map(({ binMidpoint, count }) => ({ binMidpoint, count }))).toEqual([
+      { binMidpoint: 0.85, count: 1 },
+      { binMidpoint: 0.95, count: 1 },
+    ]);
+  });
+
+  it('uses left-closed, right-open intervals at every boundary for 2 through 100 bins', () => {
+    const bytes = new DataView(new ArrayBuffer(8));
+    for (let bins = 2; bins <= 100; bins++) {
+      for (let index = 1; index < bins; index++) {
+        const boundary = index / bins;
+        bytes.setFloat64(0, boundary);
+        const bits = bytes.getBigUint64(0);
+        bytes.setBigUint64(0, bits - 1n);
+        const before = bytes.getFloat64(0);
+        bytes.setBigUint64(0, bits + 1n);
+        const after = bytes.getFloat64(0);
+        const curve = calibrationCurve(
+          [before, boundary, after].map((p) => ({ p, outcome: 0 })),
+          { bins },
+        );
+        expect(
+          curve.map(({ binMidpoint, count }) => ({ binMidpoint, count })),
+          `boundary ${index}/${bins}`,
+        ).toEqual([
+          { binMidpoint: (index - 0.5) / bins, count: 1 },
+          { binMidpoint: (index + 0.5) / bins, count: 2 },
+        ]);
+      }
+    }
+  });
+
   it('preserves the mean of repeated probabilities in a large calibrated bin', () => {
     const samples: Sample[] = Array.from({ length: 10_000 }, (_, i) => ({
       p: 0.7,

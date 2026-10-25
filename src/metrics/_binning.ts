@@ -19,8 +19,8 @@ export interface BinAggregate {
 /**
  * Partitions samples into `bins` equal-width bins over `[0, 1]`.
  *
- * The bin index of a probability `p` is `min(floor(p * bins), bins - 1)`, so that
- * `p = 1` falls into the last bin. Returns only occupied bins, sorted by index.
+ * Bin `k` covers `[k / bins, (k + 1) / bins)`, with `p = 1` included in the
+ * last bin. Returns only occupied bins, sorted by index.
  * Storage depends on the number of occupied bins rather than the resolution.
  *
  * @internal
@@ -29,7 +29,14 @@ export function binSamples(samples: readonly Sample[], bins: number): BinAggrega
   const aggregates = new Map<number, Omit<BinAggregate, 'sumP'> & { sumP: CompensatedSum }>();
 
   for (const { p, outcome } of samples) {
-    const index = Math.min(Math.floor(p * bins), bins - 1);
+    let index = Math.min(Math.floor(p * bins), bins - 1);
+    // Multiplication may round a value across a boundary in either direction.
+    // Compare with the actual interval endpoints to correct that one-bin error.
+    if (p < index / bins) {
+      index -= 1;
+    } else if (index < bins - 1 && p >= (index + 1) / bins) {
+      index += 1;
+    }
     let bin = aggregates.get(index);
     if (bin === undefined) {
       bin = { index, count: 0, sumP: new CompensatedSum(), sumOutcome: 0 };

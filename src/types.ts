@@ -20,6 +20,7 @@ export interface Sample {
 export interface BinningOptions {
   /**
    * Number of equal-width bins over the `[0, 1]` probability range.
+   * Bin `k` covers `[k / bins, (k + 1) / bins)`; `p = 1` is in the last bin.
    * Must be a positive safe integer (at most `Number.MAX_SAFE_INTEGER`).
    * Defaults to `10`. Only occupied bins are stored.
    */
