@@ -11,31 +11,37 @@ export class CompensatedSum {
     this.sum = next;
   }
 
-  value(): number {
-    return this.sum + this.correction;
+  /** Adds a weighted contribution without rounding away the product's low part. */
+  addProduct(value: number, weight: number): void {
+    const product = value * weight;
+    this.add(product);
+    this.add(productError(value, weight, product));
   }
 
   /** Divides without discarding the low-order part of the accumulated sum. */
   mean(count: number): number {
     const quotient = this.sum / count;
     const product = quotient * count;
-    // Dekker's split recovers the rounding error in quotient * count.
-    // Counts are safe integers and quotients are bounded metric values or
-    // probabilities, so these intermediate products cannot overflow.
-    const splitter = 2 ** 27 + 1;
-    const splitQuotient = splitter * quotient;
-    const quotientHigh = splitQuotient - (splitQuotient - quotient);
-    const quotientLow = quotient - quotientHigh;
-    const splitCount = splitter * count;
-    const countHigh = splitCount - (splitCount - count);
-    const countLow = count - countHigh;
-    const productError =
-      quotientHigh * countHigh -
-      product +
-      quotientHigh * countLow +
-      quotientLow * countHigh +
-      quotientLow * countLow;
-    const remainder = this.sum - product - productError + this.correction;
+    const remainder = this.sum - product - productError(quotient, count, product) + this.correction;
     return quotient + remainder / count;
   }
+}
+
+/** Dekker's split recovers the low-order part of a finite product. */
+function productError(value: number, weight: number, product: number): number {
+  // Metric values and safe-integer counts keep the split products finite.
+  const splitter = 2 ** 27 + 1;
+  const splitValue = splitter * value;
+  const valueHigh = splitValue - (splitValue - value);
+  const valueLow = value - valueHigh;
+  const splitWeight = splitter * weight;
+  const weightHigh = splitWeight - (splitWeight - weight);
+  const weightLow = weight - weightHigh;
+  return (
+    valueHigh * weightHigh -
+    product +
+    valueHigh * weightLow +
+    valueLow * weightHigh +
+    valueLow * weightLow
+  );
 }

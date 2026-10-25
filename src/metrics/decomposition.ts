@@ -52,18 +52,18 @@ export function brierDecomposition(
   const reliability = new CompensatedSum();
   const resolution = new CompensatedSum();
   for (const { count, meanPredicted, sumOutcome } of aggregates) {
-    reliability.add(count * binCalibrationGap(meanPredicted, sumOutcome, count) ** 2);
+    reliability.addProduct(binCalibrationGap(meanPredicted, sumOutcome, count) ** 2, count);
     // Resolution is unchanged by exchanging the labels. Use the rarer outcome
     // to avoid subtracting two frequencies close to one in imbalanced data.
     const deviation = useNegativeOutcomes
       ? (count - sumOutcome) / count - negativeRate
       : sumOutcome / count - baseRate;
-    resolution.add(count * deviation ** 2);
+    resolution.addProduct(deviation ** 2, count);
   }
 
   return {
-    reliability: reliability.value() / n,
-    resolution: resolution.value() / n,
+    reliability: reliability.mean(n),
+    resolution: resolution.mean(n),
     uncertainty: baseRate * negativeRate,
   };
 }

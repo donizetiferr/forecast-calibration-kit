@@ -204,6 +204,18 @@ describe('calibrationCurve', () => {
 });
 
 describe('expectedCalibrationError', () => {
+  it.each([
+    { probabilities: [0, 2 ** -54, 1], expected: 0.33333333333333337 },
+    { probabilities: [0.1, 0.1, 0.9], expected: 0.3666666666666667 },
+  ])('preserves the weighted gap across bins ($probabilities)', ({ probabilities, expected }) => {
+    const samples: Sample[] = probabilities.map((p) => ({ p, outcome: 0 }));
+    // With only negative outcomes, ECE is the mean probability at every resolution.
+    for (const bins of [1, 2, 10]) {
+      expect(expectedCalibrationError(samples, { bins })).toBe(expected);
+      expect(expectedCalibrationError([...samples].reverse(), { bins })).toBe(expected);
+    }
+  });
+
   it.each([1, 1 - 2 ** -20])(
     'preserves a rare calibration gap with a constant forecast of %s',
     (p) => {

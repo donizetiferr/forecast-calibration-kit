@@ -20,6 +20,30 @@ function constantWithinBinSamples(
 }
 
 describe('brierDecomposition', () => {
+  it.each([
+    { p: 0.1, count: 7 },
+    { p: 0.3, count: 3 },
+    { p: 0.9, count: 5 },
+  ])('preserves reliability for a repeated constant forecast ($p, $count)', ({ p, count }) => {
+    const samples: Sample[] = Array.from({ length: count }, () => ({ p, outcome: 0 }));
+    const { reliability, resolution, uncertainty } = brierDecomposition(samples);
+    expect(reliability).toBe(p ** 2);
+    expect(reliability).toBe(brierScore(samples));
+    expect(resolution).toBe(0);
+    expect(uncertainty).toBe(0);
+  });
+
+  it('preserves resolution when a dataset is repeated', () => {
+    const samples: Sample[] = [
+      { p: 0, outcome: 1 },
+      { p: 1, outcome: 0 },
+      { p: 0, outcome: 0 },
+    ];
+    const original = brierDecomposition(samples, { bins: 2 });
+    const repeated = brierDecomposition([...samples, ...samples, ...samples], { bins: 2 });
+    expect(repeated.resolution).toBe(original.resolution);
+  });
+
   it.each([1, 1 - 2 ** -20])(
     'preserves reliability for a rare error with a constant forecast of %s',
     (p) => {

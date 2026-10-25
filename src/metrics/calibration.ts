@@ -72,7 +72,7 @@ export function expectedCalibrationError(
   const aggregates = binSamples(samples, bins);
   const ece = new CompensatedSum();
   for (const { count, meanPredicted, sumOutcome } of aggregates) {
-    ece.add((count / n) * binCalibrationGap(meanPredicted, sumOutcome, count));
+    ece.addProduct(binCalibrationGap(meanPredicted, sumOutcome, count), count);
   }
-  return ece.value();
+  return ece.mean(n);
 }
