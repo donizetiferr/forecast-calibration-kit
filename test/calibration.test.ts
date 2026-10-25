@@ -151,6 +151,23 @@ describe('calibrationCurve', () => {
 });
 
 describe('expectedCalibrationError', () => {
+  it('preserves the total gap across many occupied bins', () => {
+    const bins = 2 ** 48;
+    const samples: Sample[] = [{ p: 0, outcome: 1 }];
+    let state = 42;
+    let numeratorSum = 0;
+    for (let i = 0; i < 10_000; i++) {
+      state = (Math.imul(1_664_525, state) + 1_013_904_223) >>> 0;
+      const numerator = state + 1;
+      numeratorSum += numerator;
+      samples.push({ p: numerator / bins, outcome: 0 });
+    }
+    // Every bin contains one sample. Integer numerators sum exactly here.
+    const expected = (1 + numeratorSum / bins) / samples.length;
+    const actual = expectedCalibrationError(samples, { bins });
+    expect(Math.abs(actual - expected)).toBeLessThan(expected * Number.EPSILON * 4);
+  });
+
   it('matches a hand-computed value', () => {
     // bin0: |0.25 - 0.5| * (2/4) = 0.125 ; bin1: |0.85 - 1| * (2/4) = 0.075 ; total = 0.2
     expect(expectedCalibrationError(TWO_BIN_SET, { bins: 2 })).toBeCloseTo(0.2, 12);

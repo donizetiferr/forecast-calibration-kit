@@ -1,6 +1,7 @@
 import type { BinningOptions, BrierDecomposition, Sample } from '../types';
 import { assertBins, assertOptions, assertSamples } from '../validation';
 import { binSamples } from './_binning';
+import { CompensatedSum } from './_sum';
 
 const DEFAULT_BINS = 10;
 
@@ -46,18 +47,18 @@ export function brierDecomposition(
   }
   const baseRate = totalOutcome / n;
 
-  let reliability = 0;
-  let resolution = 0;
+  const reliability = new CompensatedSum();
+  const resolution = new CompensatedSum();
   for (const { count, sumP, sumOutcome } of aggregates) {
     const meanPredicted = sumP / count;
     const observedFrequency = sumOutcome / count;
-    reliability += count * (meanPredicted - observedFrequency) ** 2;
-    resolution += count * (observedFrequency - baseRate) ** 2;
+    reliability.add(count * (meanPredicted - observedFrequency) ** 2);
+    resolution.add(count * (observedFrequency - baseRate) ** 2);
   }
 
   return {
-    reliability: reliability / n,
-    resolution: resolution / n,
+    reliability: reliability.value() / n,
+    resolution: resolution.value() / n,
     uncertainty: baseRate * (1 - baseRate),
   };
 }

@@ -20,6 +20,21 @@ function constantWithinBinSamples(
 }
 
 describe('brierDecomposition', () => {
+  it('retains small reliability terms and full resolution across many occupied bins', () => {
+    const count = 10_000;
+    const bins = 2 ** 40;
+    const samples: Sample[] = [
+      { p: 0, outcome: 1 },
+      ...Array.from({ length: count }, (_, i): Sample => ({ p: (i + 1) / bins, outcome: 0 })),
+    ];
+    // All bins contain one sample. Sum of squared forecasts is sum(k^2) / bins^2.
+    const expectedReliability =
+      (1 + (count * (count + 1) * (2 * count + 1)) / 6 / bins ** 2) / (count + 1);
+    const { reliability, resolution, uncertainty } = brierDecomposition(samples, { bins });
+    expect(Math.abs(reliability - expectedReliability)).toBeLessThan(expectedReliability * 1e-15);
+    expect(Math.abs(resolution - uncertainty)).toBeLessThan(uncertainty * 1e-15);
+  });
+
   it.each([
     { outcomes: [0, 1] as const, score: 0.01, covariance: 0.2 },
     { outcomes: [1, 0] as const, score: 0.81, covariance: -0.2 },
