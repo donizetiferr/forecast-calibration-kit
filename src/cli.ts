@@ -158,7 +158,9 @@ export async function run(argv: readonly string[], io: CliIo): Promise<CliResult
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(raw);
+    // UTF-8 files may start with a byte order mark. Only remove that prefix;
+    // a BOM elsewhere must still be rejected by the JSON parser.
+    parsed = JSON.parse(raw.startsWith('\uFEFF') ? raw.slice(1) : raw);
   } catch (error) {
     return { stdout: '', stderr: `Input is not valid JSON: ${message(error)}\n`, exitCode: 1 };
   }

@@ -127,6 +127,26 @@ describe('formatReport', () => {
 });
 
 describe('run', () => {
+  it.each(['file', 'stdin'] as const)(
+    'accepts UTF-8 JSON with a leading BOM from %s',
+    async (source) => {
+      const raw = `\uFEFF${SAMPLES_JSON}\r\n`;
+      const result = await run(
+        source === 'file' ? ['data.json', '--format=json'] : ['--format=json'],
+        fakeIo({ readFile: () => raw, readStdin: async () => raw }),
+      );
+      expect(result.exitCode).toBe(0);
+      expect(result.stderr).toBe('');
+      expect(JSON.parse(result.stdout)).toEqual(computeReport(SAMPLES));
+    },
+  );
+
+  it('rejects a BOM embedded inside the JSON document', async () => {
+    const result = await run([], fakeIo({ readStdin: async () => '[\uFEFF{"p":0,"outcome":0}]' }));
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('not valid JSON');
+  });
+
   it('prints the version and exits 0', async () => {
     const result = await run(['--version'], fakeIo());
     expect(result.exitCode).toBe(0);

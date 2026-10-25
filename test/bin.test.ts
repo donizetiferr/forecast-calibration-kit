@@ -48,6 +48,23 @@ function invoke(args: string[], input = ''): Promise<{ stdout: string; stderr: s
 }
 
 describe('CLI executable', () => {
+  it.each(['file', 'stdin'] as const)(
+    'reads a UTF-8 BOM from %s with the real executable',
+    async (source) => {
+      const raw = '\uFEFF[{"p":0.5,"outcome":1}]\r\n';
+      const path = join(directory, 'utf8-bom.json');
+      await writeFile(path, raw, 'utf8');
+      const { stdout, stderr } = await invoke(
+        source === 'file' ? [path, '--format=json'] : ['--format=json'],
+        source === 'stdin' ? raw : '',
+      );
+      expect(stderr).toBe('');
+      const report = JSON.parse(stdout) as { count: number; brierScore: number };
+      expect(report.count).toBe(1);
+      expect(report.brierScore).toBe(0.25);
+    },
+  );
+
   it('prints the package version', async () => {
     expect(await invoke(['--version'])).toEqual({ stdout: `${version}\n`, stderr: '' });
   });

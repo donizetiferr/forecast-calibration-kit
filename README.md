@@ -163,6 +163,7 @@ calibration curve when you specifically care about whether "70%" really happens
 
 Score a JSON dataset without writing any code. Input is a JSON array of
 `{ "p": <0..1>, "outcome": <0|1> }`, read from a file argument or from stdin.
+Input must be UTF-8; a leading byte order mark (BOM) is accepted.
 
 ```bash
 # From a file
