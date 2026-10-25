@@ -50,7 +50,7 @@ export interface CliResult {
 
 const DEFAULT_BINS = 10;
 const USAGE =
-  'Usage: forecast-calibration-kit [FILE] [--bins <n>] [--format table|json] [--eps <e>]';
+  'Usage: forecast-calibration-kit [--bins <n>] [--format table|json] [--eps <e>] [--] [FILE]';
 
 /**
  * Parses CLI arguments (everything after the node executable and script name).
@@ -59,10 +59,18 @@ const USAGE =
  */
 export function parseArgs(argv: readonly string[]): CliOptions {
   const opts: CliOptions = { bins: DEFAULT_BINS, format: 'table', help: false, version: false };
+  let positionalOnly = false;
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
-    if (arg === '-h' || arg === '--help') {
+    if (arg === '--' && !positionalOnly) {
+      positionalOnly = true;
+    } else if (positionalOnly || !arg.startsWith('-')) {
+      if (opts.input !== undefined) {
+        throw new CliArgError(`Unexpected extra argument: ${arg}`);
+      }
+      opts.input = arg;
+    } else if (arg === '-h' || arg === '--help') {
       opts.help = true;
     } else if (arg === '-v' || arg === '--version') {
       opts.version = true;
@@ -78,12 +86,8 @@ export function parseArgs(argv: readonly string[]): CliOptions {
       opts.format = parseFormat(argv[++i], '--format');
     } else if (arg.startsWith('--format=')) {
       opts.format = parseFormat(arg.slice('--format='.length), '--format');
-    } else if (arg.startsWith('-')) {
-      throw new CliArgError(`Unknown option: ${arg}`);
-    } else if (opts.input !== undefined) {
-      throw new CliArgError(`Unexpected extra argument: ${arg}`);
     } else {
-      opts.input = arg;
+      throw new CliArgError(`Unknown option: ${arg}`);
     }
   }
 
@@ -260,7 +264,7 @@ function helpText(version: string): string {
     'Calibration metrics for probabilistic (binary) forecasts.',
     '',
     'USAGE:',
-    '  forecast-calibration-kit [FILE] [options]',
+    '  forecast-calibration-kit [options] [--] [FILE]',
     '  cat data.json | forecast-calibration-kit [options]',
     '',
     'INPUT:',
@@ -272,6 +276,7 @@ function helpText(version: string): string {
     '  --eps <e>        Probability clamp for log loss, in (0, 0.5) (default: 1e-15).',
     '  -h, --help       Show this help.',
     '  -v, --version    Show version.',
+    '  --              End options (for file names starting with "-").',
     '',
   ].join('\n');
 }

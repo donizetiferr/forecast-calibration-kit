@@ -174,6 +174,9 @@ echo '[{"p":0.9,"outcome":1},{"p":0.2,"outcome":0}]' | npx forecast-calibration-
 
 # Options
 npx forecast-calibration-kit data.json --bins 5 --format json
+
+# File names that start with a dash: put options before the -- marker
+npx forecast-calibration-kit --format json -- -data.json
 ```
 
 Options:

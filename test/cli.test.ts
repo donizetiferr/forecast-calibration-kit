@@ -22,6 +22,30 @@ function fakeIo(overrides: Partial<CliIo> = {}): CliIo {
 }
 
 describe('parseArgs', () => {
+  it.each(['-data.json', '--help', '--version', '--bins=2', '--', '-'])(
+    'accepts the literal file name %s after the end-of-options marker',
+    (input) => {
+      expect(parseArgs(['--', input])).toEqual({
+        input,
+        bins: 10,
+        format: 'table',
+        help: false,
+        version: false,
+      });
+    },
+  );
+
+  it('keeps options before the marker and rejects extra file arguments after it', () => {
+    expect(parseArgs(['--bins=5', '--format=json', '--', '-data.json'])).toMatchObject({
+      bins: 5,
+      format: 'json',
+      input: '-data.json',
+    });
+    expect(() => parseArgs(['--', 'a.json', 'b.json'])).toThrow(/Unexpected extra argument/);
+    expect(() => parseArgs(['a.json', '--', 'b.json'])).toThrow(/Unexpected extra argument/);
+    expect(() => parseArgs(['--unknown', '--', 'data.json'])).toThrow(/Unknown option/);
+  });
+
   it('applies sensible defaults', () => {
     expect(parseArgs([])).toEqual({
       bins: 10,
@@ -127,6 +151,32 @@ describe('formatReport', () => {
 });
 
 describe('run', () => {
+  it('reads a flag-like file name literally after --', async () => {
+    let requestedPath: string | undefined;
+    const result = await run(
+      ['--format=json', '--', '--help'],
+      fakeIo({
+        readFile: (path) => {
+          requestedPath = path;
+          return SAMPLES_JSON;
+        },
+      }),
+    );
+    expect(requestedPath).toBe('--help');
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe('');
+    expect(JSON.parse(result.stdout)).toEqual(computeReport(SAMPLES));
+  });
+
+  it('uses stdin when -- is not followed by a file name', async () => {
+    const result = await run(
+      ['--format=json', '--'],
+      fakeIo({ readStdin: async () => SAMPLES_JSON }),
+    );
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual(computeReport(SAMPLES));
+  });
+
   it.each(['file', 'stdin'] as const)(
     'accepts UTF-8 JSON with a leading BOM from %s',
     async (source) => {

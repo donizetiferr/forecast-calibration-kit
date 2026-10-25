@@ -37,7 +37,7 @@ function invoke(args: string[], input = ''): Promise<{ stdout: string; stderr: s
     const child = execFile(
       process.execPath,
       [binary, ...args],
-      { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024, timeout: 10_000 },
+      { cwd: directory, encoding: 'utf8', maxBuffer: 10 * 1024 * 1024, timeout: 10_000 },
       (error, stdout, stderr) => {
         if (error) reject(error);
         else resolve({ stdout, stderr });
@@ -48,6 +48,13 @@ function invoke(args: string[], input = ''): Promise<{ stdout: string; stderr: s
 }
 
 describe('CLI executable', () => {
+  it('scores a relative file name starting with a dash after --', async () => {
+    await writeFile(join(directory, '-data.json'), '[{"p":0.5,"outcome":1}]');
+    const { stdout, stderr } = await invoke(['--format=json', '--', '-data.json']);
+    expect(stderr).toBe('');
+    expect(JSON.parse(stdout)).toMatchObject({ count: 1, brierScore: 0.25 });
+  });
+
   it.skipIf(process.platform !== 'linux')(
     'reports a failed output write without a stack trace',
     async () => {
