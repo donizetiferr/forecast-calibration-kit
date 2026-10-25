@@ -31,10 +31,11 @@ run(process.argv.slice(2), {
     if (result.stderr) {
       process.stderr.write(result.stderr);
     }
-    process.exit(result.exitCode);
+    // Let Node drain stdout/stderr pipes before terminating the process.
+    process.exitCode = result.exitCode;
   })
   .catch((error: unknown) => {
     const detail = error instanceof Error ? error.message : String(error);
     process.stderr.write(`Unexpected error: ${detail}\n`);
-    process.exit(1);
+    process.exitCode = 1;
   });
