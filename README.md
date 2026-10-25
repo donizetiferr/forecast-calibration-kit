@@ -213,7 +213,9 @@ Calibration curve (5 non-empty bin(s))
 ```
 
 The CLI exits `0` on success, `1` on a data error (unreadable file, invalid JSON,
-out-of-range values), and `2` on a usage error (unknown flag, no input).
+out-of-range values) or output write failure, and `2` on a usage error (unknown
+flag, no input). If a downstream command closes the output pipe early, the CLI
+exits `1` quietly, without a stack trace.
 
 ## Contributing
 

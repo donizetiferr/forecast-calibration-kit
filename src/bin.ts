@@ -19,6 +19,18 @@ async function readStdin(): Promise<string> {
   return Buffer.concat(chunks).toString('utf8');
 }
 
+// A downstream command may close its pipe before the report has been written.
+// Stream errors are asynchronous and are not caught by the promise below.
+process.stdout.on('error', (error: NodeJS.ErrnoException) => {
+  process.exitCode = 1;
+  if (error.code !== 'EPIPE') {
+    process.stderr.write(`Failed to write output: ${error.message}\n`);
+  }
+});
+process.stderr.on('error', () => {
+  process.exitCode = 1;
+});
+
 run(process.argv.slice(2), {
   readStdin,
   readFile: (path) => readFileSync(path, 'utf8'),

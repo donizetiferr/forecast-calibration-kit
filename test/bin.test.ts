@@ -1,5 +1,5 @@
-import { execFile } from 'node:child_process';
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { execFile, spawn } from 'node:child_process';
+import { mkdtemp, mkdir, open, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { build } from 'tsup';
@@ -48,6 +48,64 @@ function invoke(args: string[], input = ''): Promise<{ stdout: string; stderr: s
 }
 
 describe('CLI executable', () => {
+  it.skipIf(process.platform !== 'linux')(
+    'reports a failed output write without a stack trace',
+    async () => {
+      const full = await open('/dev/full', 'w');
+      try {
+        const result = await new Promise<{ code: number | null; stderr: string }>(
+          (resolve, reject) => {
+            const child = spawn(process.execPath, [binary, '--version'], {
+              stdio: ['ignore', full.fd, 'pipe'],
+              timeout: 10_000,
+            });
+            let stderr = '';
+            child.stderr!.on('data', (chunk: Buffer) => {
+              stderr += chunk.toString('utf8');
+            });
+            child.on('error', reject);
+            child.on('close', (code) => resolve({ code, stderr }));
+          },
+        );
+        expect(result.code).toBe(1);
+        expect(result.stderr).toMatch(/^Failed to write output: .*ENOSPC.*\n$/);
+      } finally {
+        await full.close();
+      }
+    },
+  );
+
+  it.each(['stdout', 'stderr'] as const)(
+    'handles a closed %s pipe without an unhandled error',
+    async (stream) => {
+      const other = stream === 'stdout' ? 'stderr' : 'stdout';
+      const monitor = join(directory, `monitor-${stream}.cjs`);
+      await writeFile(
+        monitor,
+        `process.on('uncaughtExceptionMonitor', () => process.${other}.write('Unhandled exception\\n'));`,
+      );
+      const result = await new Promise<{
+        code: number | null;
+        signal: NodeJS.Signals | null;
+        output: string;
+      }>((resolve, reject) => {
+        const child = spawn(
+          process.execPath,
+          ['--require', monitor, binary, stream === 'stdout' ? '--version' : '--unknown'],
+          { stdio: ['ignore', 'pipe', 'pipe'], timeout: 10_000 },
+        );
+        let output = '';
+        child[stream]!.destroy();
+        child[other]!.on('data', (chunk: Buffer) => {
+          output += chunk.toString('utf8');
+        });
+        child.on('error', reject);
+        child.on('close', (code, signal) => resolve({ code, signal, output }));
+      });
+      expect(result).toEqual({ code: 1, signal: null, output: '' });
+    },
+  );
+
   it.each(['file', 'stdin'] as const)(
     'reads a UTF-8 BOM from %s with the real executable',
     async (source) => {
