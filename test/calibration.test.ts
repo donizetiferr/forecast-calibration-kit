@@ -15,6 +15,32 @@ const TWO_BIN_SET: Sample[] = [
 ];
 
 describe('calibrationCurve', () => {
+  it('keeps adjacent bin midpoints distinct at the maximum supported resolution', () => {
+    const bins = Number.MAX_SAFE_INTEGER;
+    const probabilities = [1 - 4 * 2 ** -53, 1 - 3 * 2 ** -53, 1 - 2 * 2 ** -53, 1 - 2 ** -53];
+    const curve = calibrationCurve(
+      probabilities.map((p) => ({ p, outcome: 0 })),
+      { bins },
+    );
+    // The exact midpoint is (2 * index + 1) / (2 * bins). Each rounds
+    // to its bin's left endpoint here, rather than to the next bin.
+    expect(curve.map(({ binMidpoint }) => binMidpoint)).toEqual(probabilities);
+    expect(curve.map(({ count }) => count)).toEqual([1, 1, 1, 1]);
+  });
+
+  it.each([
+    { bins: 6_150_225_494_473_816, index: 4_896_959_746_073_498, midpoint: 0.7962244230676715 },
+    { bins: 7_679_280_261_602_814, index: 6_936_379_502_608_590, midpoint: 0.9032590641718335 },
+    { bins: 7_726_327_833_076_907, index: 4_815_150_708_597_664, midpoint: 0.6232133573188151 },
+  ])(
+    'preserves the fractional midpoint for a large bin index ($index)',
+    ({ bins, index, midpoint }) => {
+      const curve = calibrationCurve([{ p: index / bins, outcome: 0 }], { bins });
+      // Expected values are rounded from the exact rational (2*index + 1)/(2*bins).
+      expect(curve[0]?.binMidpoint).toBe(midpoint);
+    },
+  );
+
   it.each([5, 9, 10, 10_000])(
     'preserves a constant probability near one when repeated %i times',
     (count) => {

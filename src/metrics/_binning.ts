@@ -65,5 +65,13 @@ export function binSamples(samples: readonly Sample[], bins: number): BinAggrega
  * @internal
  */
 export function binMidpoint(index: number, bins: number): number {
+  if (index >= 2 ** 52) {
+    // At these indices, adding 0.5 rounds to an integer before division.
+    // Keep the half-bin contribution through the compensated mean instead.
+    const numerator = new CompensatedSum();
+    numerator.add(index);
+    numerator.add(0.5);
+    return numerator.mean(bins);
+  }
   return (index + 0.5) / bins;
 }

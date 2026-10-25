@@ -20,8 +20,8 @@ export class CompensatedSum {
     const quotient = this.sum / count;
     const product = quotient * count;
     // Dekker's split recovers the rounding error in quotient * count.
-    // Counts are array lengths and metric terms are bounded, so these
-    // intermediate products cannot overflow.
+    // Counts are safe integers and quotients are bounded metric values or
+    // probabilities, so these intermediate products cannot overflow.
     const splitter = 2 ** 27 + 1;
     const splitQuotient = splitter * quotient;
     const quotientHigh = splitQuotient - (splitQuotient - quotient);
