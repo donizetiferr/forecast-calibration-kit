@@ -10,6 +10,13 @@ export class CalibrationError extends Error {
   }
 }
 
+/** Rejects malformed options passed by JavaScript callers before property access. */
+export function assertOptions(opts: unknown): void {
+  if (opts === null || typeof opts !== 'object' || Array.isArray(opts)) {
+    throw new CalibrationError('options must be an object.');
+  }
+}
+
 /**
  * Validates a list of samples at the API boundary.
  *

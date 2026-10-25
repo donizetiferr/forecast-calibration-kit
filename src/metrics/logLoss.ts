@@ -1,5 +1,5 @@
 import type { LogLossOptions, Sample } from '../types';
-import { assertEps, assertSamples } from '../validation';
+import { assertEps, assertOptions, assertSamples } from '../validation';
 
 const DEFAULT_EPS = 1e-15;
 
@@ -22,7 +22,8 @@ const DEFAULT_EPS = 1e-15;
  */
 export function logLoss(samples: readonly Sample[], opts: LogLossOptions = {}): number {
   assertSamples(samples);
-  const eps = opts.eps ?? DEFAULT_EPS;
+  assertOptions(opts);
+  const eps = opts.eps === undefined ? DEFAULT_EPS : opts.eps;
   assertEps(eps);
 
   let sum = 0;

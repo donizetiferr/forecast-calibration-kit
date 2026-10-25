@@ -1,5 +1,5 @@
 import type { BinningOptions, BrierDecomposition, Sample } from '../types';
-import { assertBins, assertSamples } from '../validation';
+import { assertBins, assertOptions, assertSamples } from '../validation';
 import { binSamples } from './_binning';
 
 const DEFAULT_BINS = 10;
@@ -33,7 +33,8 @@ export function brierDecomposition(
   opts: BinningOptions = {},
 ): BrierDecomposition {
   assertSamples(samples);
-  const bins = opts.bins ?? DEFAULT_BINS;
+  assertOptions(opts);
+  const bins = opts.bins === undefined ? DEFAULT_BINS : opts.bins;
   assertBins(bins);
 
   const n = samples.length;

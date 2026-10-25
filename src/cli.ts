@@ -1,5 +1,5 @@
 import type { BrierDecomposition, CalibrationBin, Sample } from './types';
-import { assertSamples } from './validation';
+import { assertOptions, assertSamples } from './validation';
 import { brierScore } from './metrics/brier';
 import { logLoss } from './metrics/logLoss';
 import { calibrationCurve, expectedCalibrationError } from './metrics/calibration';
@@ -100,6 +100,7 @@ export function computeReport(
   opts: { bins?: number; eps?: number } = {},
 ): CliReport {
   assertSamples(samples);
+  assertOptions(opts);
   const { bins, eps } = opts;
   let positives = 0;
   for (const { outcome } of samples) {

@@ -77,6 +77,8 @@ All functions take a non-empty array of `Sample` objects
 (`{ p: number /* [0,1] */, outcome: 0 | 1 }`) and throw a `CalibrationError`
 if the input is empty or malformed (`p` out of range, `outcome` not `0`/`1`,
 invalid options).
+Options must be objects. Omitted or `undefined` values use the defaults;
+explicit `null` values are invalid.
 
 ### `brierScore(samples): number`
 

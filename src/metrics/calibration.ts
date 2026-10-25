@@ -1,5 +1,5 @@
 import type { BinningOptions, CalibrationBin, Sample } from '../types';
-import { assertBins, assertSamples } from '../validation';
+import { assertBins, assertOptions, assertSamples } from '../validation';
 import { binMidpoint, binSamples } from './_binning';
 
 const DEFAULT_BINS = 10;
@@ -26,7 +26,8 @@ export function calibrationCurve(
   opts: BinningOptions = {},
 ): CalibrationBin[] {
   assertSamples(samples);
-  const bins = opts.bins ?? DEFAULT_BINS;
+  assertOptions(opts);
+  const bins = opts.bins === undefined ? DEFAULT_BINS : opts.bins;
   assertBins(bins);
 
   const aggregates = binSamples(samples, bins);
@@ -62,7 +63,8 @@ export function expectedCalibrationError(
   opts: BinningOptions = {},
 ): number {
   assertSamples(samples);
-  const bins = opts.bins ?? DEFAULT_BINS;
+  assertOptions(opts);
+  const bins = opts.bins === undefined ? DEFAULT_BINS : opts.bins;
   assertBins(bins);
 
   const n = samples.length;
