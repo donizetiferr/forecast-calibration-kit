@@ -65,6 +65,12 @@ describe('parseArgs', () => {
     expect(() => parseArgs(['--bins', 'abc'])).toThrow(/expects a number/);
     expect(() => parseArgs(['--eps', 'abc'])).toThrow(/expects a number/);
   });
+
+  it('rejects an unsafe integer for --bins as a usage error', async () => {
+    expect(() => parseArgs(['--bins', '9007199254740992'])).toThrow(CliArgError);
+    const result = await run(['--bins=9007199254740992'], fakeIo());
+    expect(result.exitCode).toBe(2);
+  });
 });
 
 describe('computeReport', () => {

@@ -5,6 +5,8 @@ import type { Sample } from '../types';
  * @internal
  */
 export interface BinAggregate {
+  /** Index of the occupied bin in the equal-width partition. */
+  index: number;
   /** Number of samples that fell into the bin. */
   count: number;
   /** Sum of forecast probabilities in the bin. */
@@ -17,27 +19,27 @@ export interface BinAggregate {
  * Partitions samples into `bins` equal-width bins over `[0, 1]`.
  *
  * The bin index of a probability `p` is `min(floor(p * bins), bins - 1)`, so that
- * `p = 1` falls into the last bin. Returns one aggregate per bin (length `bins`);
- * empty bins have `count === 0`.
+ * `p = 1` falls into the last bin. Returns only occupied bins, sorted by index.
+ * Storage depends on the number of occupied bins rather than the resolution.
  *
  * @internal
  */
 export function binSamples(samples: readonly Sample[], bins: number): BinAggregate[] {
-  const aggregates: BinAggregate[] = Array.from({ length: bins }, () => ({
-    count: 0,
-    sumP: 0,
-    sumOutcome: 0,
-  }));
+  const aggregates = new Map<number, BinAggregate>();
 
   for (const { p, outcome } of samples) {
     const index = Math.min(Math.floor(p * bins), bins - 1);
-    const bin = aggregates[index]!;
+    let bin = aggregates.get(index);
+    if (bin === undefined) {
+      bin = { index, count: 0, sumP: 0, sumOutcome: 0 };
+      aggregates.set(index, bin);
+    }
     bin.count += 1;
     bin.sumP += p;
     bin.sumOutcome += outcome;
   }
 
-  return aggregates;
+  return [...aggregates.values()].sort((a, b) => a.index - b.index);
 }
 
 /**

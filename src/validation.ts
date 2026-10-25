@@ -47,13 +47,15 @@ export function assertSamples(samples: readonly Sample[]): void {
 }
 
 /**
- * Validates the `bins` option: must be a positive integer.
+ * Validates the `bins` option: must be a positive safe integer.
  *
- * @throws {CalibrationError} if `bins` is not a positive integer.
+ * @throws {CalibrationError} if `bins` is not a positive safe integer.
  */
 export function assertBins(bins: number): void {
-  if (typeof bins !== 'number' || !Number.isInteger(bins) || bins < 1) {
-    throw new CalibrationError(`bins must be a positive integer, received ${stringify(bins)}.`);
+  if (typeof bins !== 'number' || !Number.isSafeInteger(bins) || bins < 1) {
+    throw new CalibrationError(
+      `bins must be a positive safe integer, received ${stringify(bins)}.`,
+    );
   }
 }
 

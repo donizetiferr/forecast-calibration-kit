@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  brierDecomposition,
   calibrationCurve,
   CalibrationError,
   expectedCalibrationError,
@@ -14,6 +15,32 @@ const TWO_BIN_SET: Sample[] = [
 ];
 
 describe('calibrationCurve', () => {
+  it('handles billions of mostly empty bins without allocating empty entries', () => {
+    const bins = 2 ** 32;
+    const samples: Sample[] = [
+      { p: 1, outcome: 1 },
+      { p: 0.5, outcome: 0 },
+      { p: 0, outcome: 0 },
+      { p: 0.5, outcome: 1 },
+    ];
+    expect(calibrationCurve(samples, { bins })).toEqual([
+      { binMidpoint: 0.5 / bins, meanPredicted: 0, observedFrequency: 0, count: 1 },
+      {
+        binMidpoint: 0.5 + 0.5 / bins,
+        meanPredicted: 0.5,
+        observedFrequency: 0.5,
+        count: 2,
+      },
+      { binMidpoint: 1 - 0.5 / bins, meanPredicted: 1, observedFrequency: 1, count: 1 },
+    ]);
+    expect(expectedCalibrationError(samples, { bins })).toBe(0);
+    expect(brierDecomposition(samples, { bins })).toEqual({
+      reliability: 0,
+      resolution: 0.125,
+      uncertainty: 0.25,
+    });
+  });
+
   it('groups samples into bins with correct aggregates', () => {
     const curve = calibrationCurve(TWO_BIN_SET, { bins: 2 });
     expect(curve).toHaveLength(2);

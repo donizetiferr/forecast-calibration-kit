@@ -63,6 +63,10 @@ describe('assertSamples', () => {
 });
 
 describe('assertBins', () => {
+  it('rejects integers whose bin indices cannot be represented safely', () => {
+    expect(() => assertBins(Number.MAX_SAFE_INTEGER + 1)).toThrow(CalibrationError);
+  });
+
   it('accepts positive integers', () => {
     expect(() => assertBins(1)).not.toThrow();
     expect(() => assertBins(10)).not.toThrow();

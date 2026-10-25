@@ -98,6 +98,9 @@ returns, for each non-empty bin, the mean forecast (`meanPredicted`) and the
 observed frequency of positives (`observedFrequency`). Plot `observedFrequency`
 against `meanPredicted` to draw a **reliability diagram**; a perfectly calibrated
 forecaster lies on the diagonal. Empty bins are omitted.
+The bin count must be a positive safe integer (at most `Number.MAX_SAFE_INTEGER`).
+Memory usage scales with occupied bins, so a fine resolution does not allocate
+an array of empty bins.
 
 ### `expectedCalibrationError(samples, opts?): number`
 

@@ -20,7 +20,8 @@ export interface Sample {
 export interface BinningOptions {
   /**
    * Number of equal-width bins over the `[0, 1]` probability range.
-   * Must be a positive integer. Defaults to `10`.
+   * Must be a positive safe integer (at most `Number.MAX_SAFE_INTEGER`).
+   * Defaults to `10`. Only occupied bins are stored.
    */
   bins?: number;
 }

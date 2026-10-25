@@ -182,8 +182,8 @@ export async function run(argv: readonly string[], io: CliIo): Promise<CliResult
 
 function parseBins(value: string | undefined, flag: string): number {
   const n = parseNumber(value, flag);
-  if (!Number.isInteger(n) || n < 1) {
-    throw new CliArgError(`${flag} expects a positive integer, received "${value}".`);
+  if (!Number.isSafeInteger(n) || n < 1) {
+    throw new CliArgError(`${flag} expects a positive safe integer, received "${value}".`);
   }
   return n;
 }

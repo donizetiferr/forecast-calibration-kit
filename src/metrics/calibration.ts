@@ -31,13 +31,9 @@ export function calibrationCurve(
 
   const aggregates = binSamples(samples, bins);
   const curve: CalibrationBin[] = [];
-  for (let i = 0; i < aggregates.length; i++) {
-    const { count, sumP, sumOutcome } = aggregates[i]!;
-    if (count === 0) {
-      continue;
-    }
+  for (const { index, count, sumP, sumOutcome } of aggregates) {
     curve.push({
-      binMidpoint: binMidpoint(i, bins),
+      binMidpoint: binMidpoint(index, bins),
       meanPredicted: sumP / count,
       observedFrequency: sumOutcome / count,
       count,
@@ -73,9 +69,6 @@ export function expectedCalibrationError(
   const aggregates = binSamples(samples, bins);
   let ece = 0;
   for (const { count, sumP, sumOutcome } of aggregates) {
-    if (count === 0) {
-      continue;
-    }
     const meanPredicted = sumP / count;
     const observedFrequency = sumOutcome / count;
     ece += (count / n) * Math.abs(meanPredicted - observedFrequency);
