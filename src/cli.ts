@@ -282,5 +282,10 @@ function helpText(version: string): string {
 }
 
 function message(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+  try {
+    return String(error instanceof Error ? error.message : error);
+  } catch {
+    // Reading a message or converting a thrown value may itself invoke user code.
+    return 'Unknown error';
+  }
 }

@@ -151,6 +151,61 @@ describe('formatReport', () => {
 });
 
 describe('run', () => {
+  describe.each(['file', 'stdin'] as const)('%s read errors', (source) => {
+    const invokeWithError = (error: unknown) =>
+      run(
+        source === 'file' ? ['data.json'] : [],
+        fakeIo({
+          readFile: () => {
+            throw error;
+          },
+          readStdin: async () => {
+            throw error;
+          },
+        }),
+      );
+
+    it.each([
+      ['a string', 'read failed', 'read failed'],
+      ['null', null, 'null'],
+      ['undefined', undefined, 'undefined'],
+      ['a symbol', Symbol('read failed'), 'Symbol(read failed)'],
+    ])('reports %s without rejecting', async (_name, error, detail) => {
+      await expect(invokeWithError(error)).resolves.toEqual({
+        stdout: '',
+        stderr: `Failed to read input: ${detail}\n`,
+        exitCode: 1,
+      });
+    });
+
+    it.each([
+      ['an object without a prototype', () => Object.create(null) as unknown],
+      [
+        'an object whose string conversion throws',
+        () => ({
+          toString() {
+            throw new Error('Cannot inspect failure');
+          },
+        }),
+      ],
+      [
+        'an Error whose message getter throws',
+        () =>
+          Object.defineProperty(new Error(), 'message', {
+            get() {
+              throw new Error('Cannot read failure');
+            },
+          }),
+      ],
+    ] as const)('handles %s without losing the read failure', async (_name, makeError) => {
+      await expect(invokeWithError(makeError())).resolves.toEqual({
+        stdout: '',
+        stderr: 'Failed to read input: Unknown error\n',
+        exitCode: 1,
+      });
+    });
+  });
+
   it('reads a flag-like file name literally after --', async () => {
     let requestedPath: string | undefined;
     const result = await run(
